@@ -30,20 +30,34 @@ void limpiarMemoria(NodoExamen *&);
 
 int main(){
     int opc;
-    NodoExamen *examen;
+    NodoExamen *examen=NULL;
     Pregunta pregunta;
     do{
+        system("cls");
         cout<<"Aplicacion de Examen"<<endl;
-        cout<<"Generar Examen ...1"<<endl;
-        cout<<"Modificar Examen ..2"<<endl;
-        cout<<"Aplicar Examen ...3"<<endl;
-        cout<<"Mostrar Examen ...4"<<endl;
-        cout<<"Salir"<<endl;
+        cout<<"Generar Examen....1"<<endl;
+        cout<<"Modificar Examen..2"<<endl;
+        cout<<"Aplicar Examen....3"<<endl;
+        cout<<"Mostrar Examen....4"<<endl;
+        cout<<"Salir.............5"<<endl;
         cout<<"Ingrese su opcion: ";
         cin>>opc;
         switch(opc){
             case 1:
-                generarExamen(examen, pregunta);
+                cin.ignore();
+                cout<<"Pregunta: ";
+                cin.getline(pregunta.preg,100);
+                for(int i=0;i<4;i++){
+                    cout<<"Opcion "<<i+1<<": ";
+                    cin.getline(pregunta.opciones[i],100);
+                }
+                cout<<"Respuesta correcta (1-4): ";
+                cin>>pregunta.respCorrecta;
+                cout<<"Puntos: ";
+                cin>>pregunta.puntos;
+                system("pause");
+                generarExamen(examen,pregunta);
+                cin.ignore();
                 break;
             case 2:
                 modificarExamen(examen);
@@ -56,37 +70,42 @@ int main(){
                 break;
         }   
     }while(opc!=5);
+    limpiarMemoria(examen);
     return 0;
 }
 
 NodoExamen *crearNodo(Pregunta preg){
-    NodoExamen *nuevo = new NodoExamen;
-    nuevo->preguntas = preg;
-    nuevo->sig = NULL;
-    nuevo->ant = NULL;
+    NodoExamen *nuevo=new NodoExamen;
+    nuevo->preguntas=preg;
+    nuevo->sig=NULL;
+    nuevo->ant=NULL;
     return nuevo;
 }
 
 void generarExamen(NodoExamen *&examen, Pregunta preg){
-    NodoExamen *nuevo = crearNodo(preg);
-    NodoExamen *aux = examen;
+    system("cls");
+    NodoExamen *nuevo=crearNodo(preg);
+    NodoExamen *aux=examen;
     FILE *archivo;
     archivo =fopen("examen.txt", "a");
+
     if(archivo == NULL){
         cout<<"Archivo no encontrado"<<endl;
         return;
     }
+
     if(examen == NULL){
-        examen = nuevo;
+        examen=nuevo;
     }else{
         while(aux->sig != NULL){
-            aux = aux->sig;
+            aux=aux->sig;
         }
-        aux->sig = nuevo;
-        nuevo->ant = aux;
+        aux->sig=nuevo;
+        nuevo->ant=aux;
     }
+
     fprintf(archivo,":p;%s\n",preg.preg);
-    for(int i=0;i<4;i++){
+    for(int i=0; i<4; i++){
         fprintf(archivo,":op%d;%s\n",i+1,preg.opciones[i]);
     }
     fprintf(archivo,":r;op%d\n",preg.respCorrecta);
@@ -95,50 +114,66 @@ void generarExamen(NodoExamen *&examen, Pregunta preg){
 }
 
 void mostrar(NodoExamen *examen){
-    NodoExamen *aux = examen;
+    system("cls");
+    NodoExamen *aux=examen;
     while(aux !=NULL){
-        cout<<"Pregunta:"<<aux->preguntas.preg<<endl;
+        cout<<"Pregunta: "<<aux->preguntas.preg<<endl;
         for(int i=0; i<4; i++){
             cout<<i+1<<")"<<aux->preguntas.opciones[i]<<endl;
         }
-        cout<<"respuesta correcta"<<aux->preguntas.respCorrecta;
-        cout<<"Puntos"<<aux->preguntas.puntos;
-        aux = aux->sig;
+        cout<<"Respuesta correcta "<< aux->preguntas.respCorrecta<<endl;
+        cout<<"Puntos "<< aux->preguntas.puntos<<endl;
+        aux=aux->sig;
     }
+    system("pause");
 }
+
 void modificarExamen(NodoExamen *&examen){
-    int buscar, contador=1;
-    NodoExamen *aux=examen;
+    system("cls");
+    int buscar, contador = 1;
+    NodoExamen *aux = examen;
     FILE *archivo;
-    archivo=fopen("examen.txt", "w");
-    if(archivo==NULL){
-        cout<<"archivo no encontrado";
+    NodoExamen *temp = examen;
+    if(examen == NULL){
+        cout<<"No hay preguntas para modificar"<<endl;
+        return;
     }
-    NodoExamen *temp=examen;
-    while(aux!=NULL && contador<buscar){
+    cout<<"Numero de pregunta a modificar: ";
+    cin>>buscar;
+    
+    //Buscar la pregunta
+    while(aux != NULL && contador<buscar){
         aux=aux->sig;
         contador++;
     }
-    if(aux==NULL){
-        cout<<"No existe"<<endl;
+    if(aux == NULL){
+        cout<<"Pregunta no encontrada"<<endl;
         return;
     }
     cin.ignore();
-    cout<<"Numero de pregunta a cambiar:";
-    cin>>buscar;
+
+    //Modificar datos
     cout<<"Nueva pregunta: ";
     cin.getline(aux->preguntas.preg,100);
-    for(int i=0;i<4;i++){
+    for(int i=0; i<4; i++){
         cout<<"Nueva opcion "<<i+1<<": ";
         cin.getline(aux->preguntas.opciones[i],100);
     }
-    cout<<"Nueva respuesta: ";
+    cout<<"Nueva respuesta correcta: ";
     cin>>aux->preguntas.respCorrecta;
     cout<<"Nuevos puntos: ";
     cin>>aux->preguntas.puntos;
-    while(temp!=NULL){
+
+    //Actualizar archivo
+    archivo = fopen("examen.txt","w");
+    if(archivo == NULL){
+        cout<<"No se pudo abrir archivo"<<endl;
+        return;
+    }
+    
+    while(temp != NULL){
         fprintf(archivo,":p;%s\n",temp->preguntas.preg);
-        for(int i=0;i<4;i++){
+        for(int i=0; i<4; i++){
             fprintf(archivo,":op%d;%s\n",i+1,temp->preguntas.opciones[i]);
         }
         fprintf(archivo,":r;op%d\n",temp->preguntas.respCorrecta);
@@ -146,44 +181,56 @@ void modificarExamen(NodoExamen *&examen){
         temp=temp->sig;
     }
     fclose(archivo);
+
+    cout<<"Examen modificado correctamente"<<endl;
+    system("pause");
 }
 
 void aplicarExamen(NodoExamen *&examen){
+    system("cls");
     NodoExamen *act=examen;
-    char respuesta;
+    char respuesta, opcion;
     int puntosT=0, puntos=0;
-    if(examen==NULL){
-        cout<<"No encontrado";
+    if(examen == NULL){
+        cout<<"No hay preguntas en el examen"<<endl;
+        system("pause");
         return;
     }
-    while(act!=NULL){
-        cout<<"Pregunta:"<<act->preguntas.preg;
+
+    while(act != NULL){
+        cout<<"Pregunta: "<<act->preguntas.preg<<endl;
         for(int i=0; i<4; i++){
             cout<<i+1<<") "<<act->preguntas.opciones[i]<<endl;
         }
-        cout<<"Respuesta:";
+
+        cout<<"Respuesta (1-4): ";
         cin>>respuesta;
-    puntosT+=act->preguntas.puntos;
-    if(respuesta-'0'==act->preguntas.respCorrecta){
-        puntos+=act->preguntas.puntos;
+        puntosT+=act->preguntas.puntos;
+
+        if(respuesta-'0'==act->preguntas.respCorrecta){
+           puntos+=act->preguntas.puntos;
+           cout<<"Respuesta correcta! +"<<act->preguntas.puntos<<" puntos"<<endl;
+        }else{
+            cout<<"Respuesta incorrecta. La respuesta correcta era: "<<act->preguntas.respCorrecta<<endl;
+        }
+
+        cout<<"N=siguiente \t F=finalizar"<<endl;
+        cin>>opcion;
+        if(opcion=='F' || opcion=='f'){
+            break;
+        }
+        act=act->sig;
     }
-    cout<<"N=siguiente";
-    cout<<"F=finalizar:";
-    cin>>respuesta;
-    if(respuesta=='F' || respuesta=='f'){
-     break;
-    }
-    act = act->sig;
-    }
-    cout<<"Examen terminado";
-    cout<<"Puntos obtenidos"<<puntos<<"de:"<<puntosT<<endl;
+    cout<<"Examen terminado :) " << endl;
+    cout<<"Puntos obtenidos: "<<puntos<<" de "<<puntosT<<endl;
+    system("pause");
 }
 
 void limpiarMemoria(NodoExamen *&examen){
     NodoExamen *aux;
-    while(examen !=NULL){
-        aux = examen;
-        examen = examen->sig;
+    while(examen != NULL){
+        aux=examen;
+        examen=examen->sig;
         delete aux;
     }
 }

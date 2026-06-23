@@ -1,0 +1,7 @@
+:p;g
+:op1;h
+:op2;j
+:op3;k
+:op4;l
+:r;op2
+4
